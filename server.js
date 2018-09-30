@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 
 const config = require("./config");
-const items = require("./routes/items");
+const routes = require("./routes");
 // const fakes = require("./mocks");
 
 const app = express();
@@ -26,7 +26,8 @@ mongoose
 app.use(bodyParser.json());
 
 // routes
-app.use(items);
+app.use(routes.items);
+app.use(routes.exchangeRates);
 
 app.listen(config.PORT, () => {
 	console.log("Server is running on port: " + config.PORT);
