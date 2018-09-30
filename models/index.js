@@ -1,7 +1,7 @@
 const productItem = require("./productItem");
-const exchangeRates = require("./exchangeRates");
+const ExchangeRates = require("./exchangeRates");
 
 module.exports = {
 	productItem,
-	exchangeRates
+	ExchangeRates
 };
