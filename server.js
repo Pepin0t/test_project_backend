@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 
 const config = require("./config");
 const items = require("./routes/items");
-const fakes = require("./mocks");
+// const fakes = require("./mocks");
 
 const app = express();
 
