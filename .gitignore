@@ -1,7 +1,6 @@
 /node_modules
 .env
 /client
-!client/.gitkeep
 /mocks
-/img
+/img/*
 !/img/.gitkeep
