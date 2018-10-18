@@ -3,5 +3,5 @@
 /client
 !client/.gitkeep
 /mocks
-/img/covers/*
-/img/fullsize/*
+/img
+!/img/.gitkeep
