@@ -5,7 +5,7 @@ const path = require("path");
 const bluebird = require("bluebird");
 const config = require("./config");
 const routes = require("./routes");
-// const fakes = require("./mocks");
+const { getFakes } = require("./mocks");
 
 const app = express();
 
@@ -14,11 +14,12 @@ mongoose.Promise = bluebird;
 mongoose.set("useFindAndModify", false);
 mongoose
 	.connect(
-		config.MONGO_URI,
+		config.MONGO_URI2,
 		{ useNewUrlParser: true }
 	)
 	.then(() => {
-		// fakes();
+		// get fakes
+		// getFakes();
 		console.log("Mongoose connected!");
 	})
 	.catch(e => {
@@ -31,6 +32,9 @@ app.use(bodyParser.json());
 // routes
 app.use(routes.items);
 app.use(routes.exchangeRates);
+
+// static
+app.use("/img", express.static(path.join(__dirname, "img")));
 
 // Serve statcic assets if in production
 if (process.env.NODE_ENV === "production") {

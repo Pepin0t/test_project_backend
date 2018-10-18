@@ -5,7 +5,6 @@ const productItem = new Schema({
 	title: {
 		type: String,
 		required: true,
-		unique: true
 	},
 	img: {
 		type: Array
