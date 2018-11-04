@@ -28,13 +28,14 @@ mongoose
 	});
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // routes
 app.use(routes.items);
 app.use(routes.exchangeRates);
 
 // static
-app.use("/img", express.static(path.join(__dirname, "img")));
+app.use("*/img", express.static(path.join(__dirname, "img")));
 
 // Serve statcic assets if in production
 if (process.env.NODE_ENV === "production") {
@@ -45,6 +46,8 @@ if (process.env.NODE_ENV === "production") {
 		res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
 	});
 }
+
+// !! прикрутить обработчик ошибок
 
 app.listen(config.PORT, () => {
 	console.log("Server is running on port: " + config.PORT);

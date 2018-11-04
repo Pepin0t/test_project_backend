@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const productItem = new Schema({
 	title: {
 		type: String,
-		required: true,
+		required: true
 	},
 	img: {
 		type: Array
@@ -22,11 +22,15 @@ const productItem = new Schema({
 		unique: true
 	},
 	price: {
-		type: Number
+		type: String
 	},
 	date: {
 		type: Date,
 		default: Date.now()
+	},
+	exchangeRates: {
+		type: Schema.Types.ObjectId,
+		ref: "ExchangeRates"
 	}
 });
 
