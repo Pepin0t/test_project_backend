@@ -105,6 +105,7 @@ const getFakes = async () => {
 					exchangeRates,
 					productId
 				});
+				console.log(productItem);
 			} catch (error) {
 				console.error(error.errmsg);
 			}
