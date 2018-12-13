@@ -26,7 +26,7 @@
 		"client": "npm start --prefix ../client",
 		"client-build": "npm run build --prefix ../client",
 		"dev": "concurrently \"npm run client\" \"npm run server\" ",
-		"push": "git add . && git commit -m \"test heroku\" && git push heroku master"
+		"push": "git add . && git commit -m \"test heroku\" && git push --force heroku master"
 	},
 	"engines": {
 		"node": "10.x",
