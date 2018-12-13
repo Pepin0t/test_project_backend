@@ -1,30 +1,38 @@
 {
-	"name": "drogan",
+	"name": "server",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"start": "node server.js",
-		"server": "nodemon server.js",
-		"client": "npm start --prefix ../client",
-		"dev": "concurrently \"npm run client\" \"npm run server\" "
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"main": "server.js",
 	"dependencies": {
 		"axios": "^0.18.0",
-		"bluebird": "^3.5.2",
+		"bluebird": "^3.5.3",
 		"body-parser": "^1.18.3",
-		"concurrently": "^3.6.1",
-		"dotenv": "^6.0.0",
-		"express": "^4.16.3",
-		"fs-extra": "^7.0.0",
-		"mongoose": "^5.2.9",
+		"cookie-parser": "^1.4.3",
+		"dotenv": "^6.1.0",
+		"express": "^4.16.4",
+		"fs-extra": "^7.0.1",
+		"mongoose": "^5.3.13",
 		"request": "^2.88.0",
 		"sharp": "^0.21.0"
 	},
 	"devDependencies": {
+		"concurrently": "^4.1.0",
+		"cross-env": "^5.2.0",
 		"faker": "^4.1.0"
-	}
+	},
+	"scripts": {
+		"start": "cross-env NODE_ENV=production node server.js",
+		"server": "nodemon server.js",
+		"client": "npm start --prefix ../client",
+		"client-build": "npm run build --prefix ../client",
+		"dev": "concurrently \"npm run client\" \"npm run server\" ",
+		"push": "git add . && git commit -m \"test heroku\" && git push heroku master"
+	},
+	"engines": {
+		"node": "10.x",
+		"npm": "6.x"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
 }

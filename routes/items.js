@@ -1,9 +1,5 @@
 const router = require("express").Router();
 const models = require("../models/");
-const sharp = require("sharp");
-const request = require("request");
-const fs = require("fs");
-const path = require("path");
 
 exchangeRatesConverter = (price, currency, exchangeRates) => {
 	if (price == 0) return null;
@@ -18,7 +14,8 @@ exchangeRatesConverter = (price, currency, exchangeRates) => {
 };
 
 router.post("/goods", async (req, res, next) => {
-	const { to, currency } = req.body;
+	const { to } = req.body;
+	const { currency } = req.cookies;
 
 	let goods;
 	try {
@@ -39,7 +36,8 @@ router.post("/goods", async (req, res, next) => {
 });
 
 router.post("/goods/product-item", async (req, res, next) => {
-	const { productId, currency } = req.body;
+	const { productId } = req.body;
+	const { currency } = req.cookies;
 
 	let item = {};
 	try {
@@ -54,7 +52,8 @@ router.post("/goods/product-item", async (req, res, next) => {
 });
 
 router.post("/goods/search/:condition", async (req, res, next) => {
-	const { info, currency } = req.body;
+	const { info } = req.body;
+	const { currency } = req.cookies;
 	let goods;
 
 	try {

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const models = require("../models");
+const EXCHANGE_RATES_MONGO_ID = require("../config").EXCHANGE_RATES_MONGO_ID;
 
 // admin only
 ADMIN_updateExchangeRates = async (req, res, next) => {
@@ -7,7 +8,7 @@ ADMIN_updateExchangeRates = async (req, res, next) => {
 
 	let year = date.getFullYear().toString();
 	let month = ("0" + (date.getMonth() + 1)).slice(-2);
-	let day = ("0" + date.getDay()).slice(-2);
+	let day = ("0" + date.getDate()).slice(-2);
 
 	let fullDate = year + month + day;
 
@@ -21,7 +22,8 @@ ADMIN_updateExchangeRates = async (req, res, next) => {
 			let newRates = await axios.get(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${fullDate}&json`);
 			let result = await models.ExchangeRates.create({
 				rates: [{ cc: newRates.data[27].cc, rate: newRates.data[27].rate }, { cc: newRates.data[19].cc, rate: newRates.data[19].rate }],
-				date: fullDate
+				date: fullDate,
+				_id: EXCHANGE_RATES_MONGO_ID
 			});
 
 			res.status(200).json({ rates: result.rates, message: "В базе отсутствовали данные о курсе валют! Соответствующий раздел был создан!" });
@@ -75,9 +77,7 @@ getExchangeRates = async (req, res, next) => {
 	try {
 		let check = await models.ExchangeRates.findOne({});
 
-		res.status(200)
-			.cookie("exchange-rates", JSON.stringify(check.rates), { maxAge: 86400000 })
-			.end();
+		res.status(200).end();
 	} catch (error) {
 		res.status(400).end();
 	}

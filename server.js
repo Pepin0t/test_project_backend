@@ -1,26 +1,31 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const bluebird = require("bluebird");
 const config = require("./config");
 const routes = require("./routes");
-const { getFakes } = require("./mocks");
+// const { getFakes } = require("./mocks");
 
 const app = express();
 
-mongoose.Promise = bluebird;
+const PORT = config.PORT;
+const MONGO_URI = config.MONGO_URI;
 
+mongoose.Promise = bluebird;
 mongoose.set("useFindAndModify", false);
 mongoose
 	.connect(
-		config.MONGO_URI2,
-		{ useNewUrlParser: true }
+		MONGO_URI,
+		{ useNewUrlParser: true, autoReconnect: true }
 	)
+	.then(() => {
+		console.log("Mongoose connected!");
+	})
 	.then(() => {
 		// get fakes
 		// getFakes();
-		console.log("Mongoose connected!");
 	})
 	.catch(e => {
 		console.log("WTF, Mongoose?!");
@@ -29,27 +34,26 @@ mongoose
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // routes
-app.use(routes.items);
-app.use(routes.exchangeRates);
+app.use("/api", routes.items);
+app.use("/api", routes.shoppingCart);
+app.use("/api", routes.exchangeRates);
 
 // static
-app.use("*/img", express.static(path.join(__dirname, "img")));
+app.use("/img", express.static(path.join(__dirname, "assets/img")));
 
-// Serve statcic assets if in production
 if (process.env.NODE_ENV === "production") {
-	// Set static folder
-	app.use(express.static("../client/build"));
+	app.use(express.static(path.join(__dirname, "client")));
 
 	app.get("*", (req, res) => {
-		// что-то тут не так ))
-		res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+		res.sendFile(path.resolve(__dirname, "client", "index.html"));
 	});
 }
 
 // !! прикрутить обработчик ошибок
 
-app.listen(config.PORT, () => {
-	console.log("Server is running on port: " + config.PORT);
+app.listen(PORT, () => {
+	console.log("Server is running on port " + PORT);
 });

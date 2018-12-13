@@ -4,25 +4,26 @@ const request = require("request");
 const fs = require("fs");
 const fse = require("fs-extra");
 const path = require("path");
+const config = require("../config");
 
 const models = require("../models");
 
 let categories = ["candies", "cakes", "bouquets", "presents", "balloons"];
 
 // _id документа с курсом валют в БД
-const exchangeRates = "5bbd27a85f241e466c3463a6";
+const exchangeRates = config.EXCHANGE_RATES_MONGO_ID;
 
 const getFakes = async () => {
-	await fse.remove("./img/covers/");
-	await fse.remove("./img/fullsize/");
+	await fse.remove("./assets/img/covers");
+	await fse.remove("./assets/img/fullsize");
 
-	await fs.mkdir("./img/covers/", err => {
+	await fs.mkdir(path.join("assets", "img", "covers"), err => {
 		if (err) {
 			console.log("mkdir error {covers}");
 		}
 	});
 
-	await fs.mkdir("./img/fullsize/", err => {
+	await fs.mkdir(path.join("assets", "img", "fullsize"), err => {
 		if (err) {
 			console.log("mkdir error {fullsize}");
 		}
@@ -33,6 +34,7 @@ const getFakes = async () => {
 	} catch (error) {
 		console.log(error.errmsg);
 	}
+	console.log("kuku");
 
 	for (let i = 0; i < categories.length; i++) {
 		Array.from({ length: 20 }).forEach(async () => {
@@ -49,18 +51,18 @@ const getFakes = async () => {
 					.toString(36)
 					.substr(2, 4);
 
-				await fs.mkdir(path.join("img", "fullsize", dir), err => {
+				await fs.mkdir(path.join("assets", "img", "covers", dir), err => {
 					if (err) console.log(err);
 				});
 
-				await fs.mkdir(path.join("img", "covers", dir), err => {
+				await fs.mkdir(path.join("assets", "img", "fullsize", dir), err => {
 					if (err) console.log(err);
 				});
 
 				let otherImage = "https://picsum.photos/1600/1200/?image=";
 				for (let j = 0; j < 3; j++) {
 					await request({ url: otherImage + 32 + j, encoding: null }, function(error, response, body) {
-						fs.writeFile(path.join("img", "fullsize", dir, `${productId}-fullsize_${j + 2}.jpg`), body, err => {
+						fs.writeFile(path.join("assets", "img", "fullsize", dir, `${productId}-fullsize_${j + 2}.jpg`), body, err => {
 							if (err) console.log("fullsize error");
 						});
 					});
@@ -68,7 +70,7 @@ const getFakes = async () => {
 
 				await request({ url: coverImage, encoding: null }, function(error, response, body) {
 					if (!error) {
-						fs.writeFile(path.join("img", "fullsize", dir, `${productId}-fullsize_1.jpg`), body, err => {
+						fs.writeFile(path.join("assets", "img", "fullsize", dir, `${productId}-fullsize_1.jpg`), body, err => {
 							if (err) console.log("fullsize error");
 						});
 
@@ -76,7 +78,7 @@ const getFakes = async () => {
 							.resize(648, null)
 							.toBuffer()
 							.then(data => {
-								fs.writeFile(path.join("img", "covers", dir, `${productId}-cover.jpg`), data, err => {
+								fs.writeFile(path.join("assets", "img", "covers", dir, `${productId}-cover.jpg`), data, err => {
 									if (err) {
 										console.log("covers error");
 									}
@@ -91,12 +93,12 @@ const getFakes = async () => {
 				const productItem = await models.productItem.create({
 					title: faker.lorem.word(),
 					img: [
-						path.join("img", "covers", dir, `${productId}-cover.jpg`),
+						path.join("/", "img", "covers", dir, `${productId}-cover.jpg`),
 						[
-							path.join("img", "fullsize", dir, `${productId}-fullsize_1.jpg`),
-							path.join("img", "fullsize", dir, `${productId}-fullsize_2.jpg`),
-							path.join("img", "fullsize", dir, `${productId}-fullsize_3.jpg`),
-							path.join("img", "fullsize", dir, `${productId}-fullsize_4.jpg`)
+							path.join("/", "img", "fullsize", dir, `${productId}-fullsize_1.jpg`),
+							path.join("/", "img", "fullsize", dir, `${productId}-fullsize_2.jpg`),
+							path.join("/", "img", "fullsize", dir, `${productId}-fullsize_3.jpg`),
+							path.join("/", "img", "fullsize", dir, `${productId}-fullsize_4.jpg`)
 						]
 					],
 					body: faker.lorem.words(200),
@@ -105,7 +107,8 @@ const getFakes = async () => {
 					exchangeRates,
 					productId
 				});
-				console.log(productItem);
+
+				// console.log(productItem);
 			} catch (error) {
 				console.error(error.errmsg);
 			}
