@@ -12,8 +12,10 @@
 		"express": "^4.16.4",
 		"fs-extra": "^7.0.1",
 		"mongoose": "^5.3.13",
+		"multer": "^1.4.1",
 		"request": "^2.88.0",
-		"sharp": "^0.21.0"
+		"sharp": "^0.21.0",
+		"speakingurl": "^14.0.1"
 	},
 	"devDependencies": {
 		"concurrently": "^4.1.0",
@@ -24,7 +26,7 @@
 		"start": "cross-env NODE_ENV=production node server.js",
 		"server": "nodemon server.js",
 		"client": "npm start --prefix ../client",
-		"client-build": "npm run build --prefix ../client",
+		"client-build": "rm -rf client/* && npm run build --prefix ../client",
 		"dev": "concurrently \"npm run client\" \"npm run server\" ",
 		"push": "git add . && git commit -m \"test heroku\" && git push --force heroku master"
 	},

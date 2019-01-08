@@ -6,7 +6,6 @@ const path = require("path");
 const bluebird = require("bluebird");
 const config = require("./config");
 const routes = require("./routes");
-// const { getFakes } = require("./mocks");
 
 const app = express();
 
@@ -23,10 +22,6 @@ mongoose
 	.then(() => {
 		console.log("Mongoose connected!");
 	})
-	.then(() => {
-		// get fakes
-		// getFakes();
-	})
 	.catch(e => {
 		console.log("WTF, Mongoose?!");
 		console.log(e);
@@ -42,7 +37,7 @@ app.use("/api", routes.shoppingCart);
 app.use("/api", routes.exchangeRates);
 
 // static
-app.use("/img", express.static(path.join(__dirname, "assets/img")));
+app.use("/img", express.static(path.join(__dirname, "assets", "product_images")));
 
 if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "client")));
@@ -53,6 +48,11 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // !! прикрутить обработчик ошибок
+
+app.use((err, req, res, next) => {
+	console.log("Error_handler", err);
+	res.end("WTF?");
+});
 
 app.listen(PORT, () => {
 	console.log("Server is running on port " + PORT);
