@@ -6,10 +6,10 @@ const productItem = new Schema({
 		type: String,
 		required: true
 	},
-	img: {
-		type: Array
+	productImages: {
+		type: Schema.Types.Mixed
 	},
-	body: {
+	description: {
 		type: String
 	},
 	category: {

@@ -35,9 +35,10 @@ app.use(cookieParser());
 app.use("/api", routes.items);
 app.use("/api", routes.shoppingCart);
 app.use("/api", routes.exchangeRates);
+app.use("/api", routes.auth);
 
 // static
-app.use("/img", express.static(path.join(__dirname, "assets", "product_images")));
+app.use("/product_image", express.static(path.join(__dirname, "assets", "product_images")));
 
 if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "client")));
@@ -47,11 +48,10 @@ if (process.env.NODE_ENV === "production") {
 	});
 }
 
-// !! прикрутить обработчик ошибок
-
 app.use((err, req, res, next) => {
-	console.log("Error_handler", err);
-	res.end("WTF?");
+	const { status = 500, message = null, additionally = {} } = err;
+
+	res.status(status).json({ message, additionally });
 });
 
 app.listen(PORT, () => {

@@ -1,4 +1,5 @@
 const fs = require("fs");
+const fsa = require("fs-extra");
 const path = require("path");
 const router = require("express").Router();
 const multer = require("multer");
@@ -7,7 +8,7 @@ const getSlug = require("speakingurl");
 const models = require("../models/");
 const config = require("../config.js");
 
-exchangeRatesConverter = (price, currency, exchangeRates) => {
+const exchangeRatesConverter = (price, currency, exchangeRates) => {
 	if (price == 0) return null;
 
 	if (exchangeRates) {
@@ -19,7 +20,7 @@ exchangeRatesConverter = (price, currency, exchangeRates) => {
 	} else return price + " грн";
 };
 
-const fileNames = (req, res, next) => {
+const addFileProps = (req, res, next) => {
 	req.fileProps = {};
 
 	const productId = Math.random()
@@ -33,6 +34,7 @@ const fileNames = (req, res, next) => {
 	};
 
 	req.fileProps.productId = productId;
+	req.fileProps.productItemFilesPath = path.join(process.cwd(), "assets", "product_images", productId);
 	req.fileProps.count = fileCounter();
 
 	next();
@@ -40,59 +42,94 @@ const fileNames = (req, res, next) => {
 
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		let filePath = path.join(process.cwd(), "assets", "product_images", req.fileProps.productId, "fullsize");
+		let fullsizeImagesPath = path.join(req.fileProps.productItemFilesPath, "fullsize");
 
-		fs.mkdir(filePath, { recursive: true }, err => cb(err, filePath));
+		fs.mkdir(fullsizeImagesPath, { recursive: true }, err => cb(err, fullsizeImagesPath));
 	},
 	filename: (req, file, cb) => {
 		cb(null, req.fileProps.productId + "-fullsize_" + req.fileProps.count() + path.extname(file.originalname));
 	}
 });
 
-const upload = multer({ storage }).array("images");
+const upload = multer({ storage }).array("product_images");
 
 // admin only
 router.post("/admin/goods/add-product-item", [
-	fileNames,
+	addFileProps,
 	upload,
 	async (req, res, next) => {
 		const { title, description, price } = req.body;
-		let category = req.body.category;
-		const productId = req.fileProps.productId;
-		const coverImage = req.files[0];
+		const { productId, productItemFilesPath } = req.fileProps;
 
-		const coverDest = path.join(process.cwd(), "assets", "product_images", productId, "cover");
+		let productImages = { cover: null, fullsize: null };
 
-		fs.mkdir(coverDest, { recursive: true }, err => {
-			if (!err) {
-				const coverFileName = coverImage.filename.replace("fullsize_1", "cover");
+		// files and folders
+		if (req.files.length) {
+			const coverImage = req.files[0];
+			const coverImagePath = path.join(productItemFilesPath, "cover");
+			const coverImageFileName = coverImage.filename.replace("fullsize_1", "cover");
 
-				fs.copyFile(coverImage.path, path.join(coverDest, coverFileName), err => {
-					if (err) {
-						next(err);
-					}
-				});
-			}
-		});
+			await fs.mkdir(coverImagePath, { recursive: true }, err => {
+				if (!err) {
+					fs.copyFile(coverImage.path, path.join(coverImagePath, coverImageFileName), err => {
+						if (err) {
+							next({
+								status: 500,
+								message: err.message
+							});
+						}
+					});
+				} else {
+					next({
+						status: 500,
+						message: err.message
+					});
+				}
+			});
 
-		category = getSlug(category, { maintainCase: false });
+			let fullsizeImagesArray = [];
 
+			req.files.forEach(image => fullsizeImagesArray.push(path.join("/", "product_image", productId, "fullsize", image.filename)));
+
+			productImages.cover = path.join("/", "product_image", productId, "cover", coverImageFileName);
+			productImages.fullsize = fullsizeImagesArray;
+		} else {
+			// create empty folder
+			fs.mkdir(productItemFilesPath, { recursive: true }, err => {
+				if (err) {
+					next({
+						status: 500,
+						message: err.message
+					});
+				}
+			});
+		}
+
+		// DB
 		try {
-			await models.productItem.create({
+			const category = getSlug(req.body.category, { maintainCase: false });
+
+			await models.productItsem.create({
 				title,
-				body: description,
+				description,
 				category,
 				price,
+				productImages,
 				productId,
 				exchangeRates: config.EXCHANGE_RATES_MONGO_ID
 			});
 
-			res.status(200).json({ ok: true });
-		} catch (error) {
-			next(error);
-		}
+			res.status(200).json({ message: "Продукт был успешно создан!", productURL: "/goods/" + category + "/" + productId });
+		} catch (err) {
+			fsa.remove(productItemFilesPath);
 
-		// установить helmet и passport
+			setTimeout(() => {
+				next({
+					status: 500,
+					message: err.message
+				});
+			}, 2000);
+		}
 	}
 ]);
 
@@ -116,8 +153,11 @@ router.post("/goods", async (req, res, next) => {
 			let price = exchangeRatesConverter(item.price, currency, item.exchangeRates.rates);
 			item.price = price;
 		});
-	} catch (error) {
-		console.log(error);
+	} catch (err) {
+		next({
+			status: 500,
+			message: err.message
+		});
 	}
 
 	res.status(200).json(goods);
@@ -141,15 +181,17 @@ router.post("/goods/product-item", async (req, res, next) => {
 });
 
 router.post("/goods/search/:condition", async (req, res, next) => {
-	const { info } = req.body;
 	const { currency } = req.cookies;
+	let info = req.body.info;
 	let goods;
 
 	try {
 		if (req.params.condition === "all") {
+			info = new RegExp(info, "i");
+
 			goods = await models.productItem
 				.find()
-				.or([{ title: { $regex: info } }, { body: { $regex: info } }])
+				.or([{ title: { $regex: info } }, { description: { $regex: info } }])
 				.populate("exchangeRates");
 
 			goods.map(item => {
@@ -166,8 +208,11 @@ router.post("/goods/search/:condition", async (req, res, next) => {
 		} else {
 			goods = [];
 		}
-	} catch (error) {
-		console.log(error);
+	} catch (err) {
+		next({
+			status: 500,
+			message: err.message
+		});
 	}
 
 	res.status(200).json(goods);

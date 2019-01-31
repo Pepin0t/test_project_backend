@@ -1,6 +1,5 @@
-/node_modules
 .env
+/node_modules
 /client
-/uploads
 /assets/product_images/*
 !/assets/product_images/.gitkeep

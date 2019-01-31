@@ -16,12 +16,13 @@ router.post("/shopping-cart/get-shopping-list", async (req, res, next) => {
 	if (listOfProductId_s) {
 		try {
 			shoppingList = await models.productItem.find({ productId: { $in: listOfProductId_s } });
-		} catch (error) {
-			console.log(error);
+			res.json(shoppingList);
+		} catch (err) {
+			next({
+				message: err.message
+			});
 		}
 	}
-
-	res.json(shoppingList);
 });
 
 module.exports = router;
