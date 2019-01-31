@@ -3,3 +3,4 @@
 /client
 /assets/product_images/*
 !/assets/product_images/.gitkeep
+/mocks
