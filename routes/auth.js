@@ -34,12 +34,12 @@ router.post("/sign-in", async (req, res, next) => {
 
 						await models.Verification.findOneAndRemove({ user: user.login });
 						await models.Verification.create({ user: user.login, key });
-						// await axios({
-						// 	method: "get",
-						// 	url: `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_BOT_CHAT_ID}&parse_mode=html&text=${key}`
-						// });
+						await axios({
+							method: "get",
+							url: `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_BOT_CHAT_ID}&parse_mode=html&text=${key}`
+						});
 
-						let timeLeft = 120; // seconds
+						let timeLeft = 10; // seconds
 
 						let jwtPayload = {
 							user: user.login,
@@ -92,21 +92,48 @@ router.post("/sign-in", async (req, res, next) => {
 
 // router.post("/sign-out", (req, res, next)=> {})
 
-router.post("/registration", async (req, res, next) => {
-	const { login, password } = req.body;
-	try {
-		let user = await models.User.create({ login, password, audience: "user" });
-		res.json({ ok: "OK!" });
+const createToken = user => {
+	let jwtPayload = {
+		user: user.login,
+		audience: user.audience
+	};
 
-		console.log(user);
-	} catch (error) {
-		next({ status: 500, message: "Sorry" });
+	const token = jwt.sign(jwtPayload, process.env.SECRET_KEY);
+
+	if (token) {
+		return token;
+	} else {
+		throw new Error("Непредвиденная ошибка!");
+	}
+};
+
+router.post("/registration", async (req, res, next) => {
+	const { login, password, confirmPassword } = req.body;
+
+	const findUser = await models.User.findOne({ login });
+
+	if (findUser) {
+		next({
+			status: 409,
+			message: "Данное имя уже занято!"
+		});
+	} else {
+		try {
+			const user = await models.User.create({ login, password, audience: "user" });
+
+			res.json({ registrationComplete: true });
+		} catch (err) {
+			next({
+				status: 500,
+				message: err.message
+			});
+		}
 	}
 });
 
 router.post("/admin-verification", async (req, res, next) => {
 	const { key } = req.body;
-	let decoded = jwt.verify(req.headers.authorization, process.env.SECRET_KEY);
+	const decoded = jwt.verify(req.headers.authorization, process.env.SECRET_KEY);
 	let verification;
 
 	try {
